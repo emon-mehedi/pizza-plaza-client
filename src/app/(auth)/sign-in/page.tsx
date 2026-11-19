@@ -1,11 +1,15 @@
-import React from 'react';
+import type { Metadata } from "next"
 
-const SignInPage = () => {
+import { SignInForm } from "@/components/auth/sign-in-form"
+
+export const metadata: Metadata = {
+  title: "Sign in | Pizza Plaza",
+}
+
+export default function SignInPage() {
   return (
-    <div>
-      <h2>Sign in page</h2>
-    </div>
-  );
-};
-
-export default SignInPage;
+    <main className="flex flex-1 items-center justify-center bg-muted/30 px-4 py-10">
+      <SignInForm />
+    </main>
+  )
+}

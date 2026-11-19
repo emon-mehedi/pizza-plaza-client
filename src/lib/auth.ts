@@ -9,7 +9,7 @@ if (!mongoUri) {
 }
 
 const client = new MongoClient(mongoUri);
-const db = client.db("BazarDor");
+const db = client.db("pizzaplaza");
 
 export const auth = betterAuth({
   database: mongodbAdapter(db),

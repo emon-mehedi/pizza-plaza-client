@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import type { FormEvent } from "react"
+import { useState, type FormEvent } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { FieldGroup } from "@/components/ui/field"
+import { authClient } from "@/lib/auth-client"
 import type { IUser } from "@/lib/types/all-types"
 
 import { TextField } from "./text-field"
@@ -28,8 +29,12 @@ type SignInFormProps = {
 }
 
 export function SignInForm({ onSubmit }: SignInFormProps) {
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  const [error, setError] = useState<string | null>(null)
+  const [isPending, setIsPending] = useState(false)
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    setError(null)
 
     const formData = new FormData(event.currentTarget)
     const credentials: SignInCredentials = {
@@ -37,10 +42,30 @@ export function SignInForm({ onSubmit }: SignInFormProps) {
       password: String(formData.get("password") ?? ""),
     }
 
-    // TODO: Replace with your real sign-in request / server action.
     if (onSubmit) {
-      void onSubmit(credentials)
+      await onSubmit(credentials)
+      return
     }
+
+    setIsPending(true)
+    const { error } = await authClient.signIn.email({
+      email: credentials.email,
+      password: credentials.password,
+      callbackURL: "/",
+    })
+    setIsPending(false)
+
+    if (error) {
+      setError(error.message ?? "Unable to sign in.")
+    }
+  }
+
+  async function handleGoogleSignIn() {
+    setError(null)
+    await authClient.signIn.social({
+      provider: "google",
+      callbackURL: "/",
+    })
   }
 
   return (
@@ -51,7 +76,7 @@ export function SignInForm({ onSubmit }: SignInFormProps) {
       </CardHeader>
 
       <form onSubmit={handleSubmit}>
-        <CardContent>
+        <CardContent className="space-y-4">
           <FieldGroup>
             <TextField
               label="Email"
@@ -70,11 +95,21 @@ export function SignInForm({ onSubmit }: SignInFormProps) {
               required
             />
           </FieldGroup>
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
         </CardContent>
 
         <CardFooter className="flex-col items-stretch gap-3">
-          <Button type="submit" size="lg" className="w-full">
-            Sign in
+          <Button type="submit" size="lg" className="w-full" disabled={isPending}>
+            {isPending ? "Signing in..." : "Sign in"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            className="w-full"
+            onClick={handleGoogleSignIn}
+          >
+            Continue with Google
           </Button>
           <p className="text-center text-sm text-muted-foreground">
             Don&apos;t have an account?{" "}

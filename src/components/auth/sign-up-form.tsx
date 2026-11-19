@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useState, type FormEvent } from "react"
+import { useState, type ChangeEvent, type FormEvent } from "react"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -12,7 +12,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
-import { FieldGroup } from "@/components/ui/field"
+import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import { authClient } from "@/lib/auth-client"
 import type { IUser } from "@/lib/types/all-types"
 
 import { RoleSelector, type SignUpRole } from "./role-selector"
@@ -32,15 +34,65 @@ type SignUpFormProps = {
 
 export function SignUpForm({ onSubmit }: SignUpFormProps) {
   const [role, setRole] = useState<SignUpRole>(DEFAULTS.role)
+  const [imageUrl, setImageUrl] = useState("")
+  const [error, setError] = useState<string | null>(null)
+  const [isPending, setIsPending] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleImageUpload(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    if (!file) return
+
+    setError(null)
+    setIsUploading(true)
+
+    try {
+      const formData = new FormData()
+      formData.append("image", file)
+
+      const response = await fetch("/api/upload-image", {
+        method: "POST",
+        body: formData,
+      })
+
+      const data = (await response.json()) as { url?: string; error?: string }
+
+      if (!response.ok || !data.url) {
+        setError(data.error ?? "Image upload failed.")
+        return
+      }
+
+      setImageUrl(data.url)
+    } catch {
+      setError("Image upload failed.")
+    } finally {
+      setIsUploading(false)
+      event.target.value = ""
+    }
+  }
+
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
+    setError(null)
 
     const formData = new FormData(event.currentTarget)
+    const password = String(formData.get("password") ?? "")
+    const confirmPassword = String(formData.get("confirmPassword") ?? "")
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match.")
+      return
+    }
+
+    if (!imageUrl) {
+      setError("Please upload a profile picture.")
+      return
+    }
+
     const user: IUser = {
       name: String(formData.get("name") ?? ""),
       email: String(formData.get("email") ?? ""),
-      image: String(formData.get("image") ?? ""),
+      image: imageUrl,
       role,
       isBlocked: DEFAULTS.isBlocked,
       subscriptionPlan: DEFAULTS.subscriptionPlan,
@@ -50,10 +102,36 @@ export function SignUpForm({ onSubmit }: SignUpFormProps) {
       // subscriptionExpiresAt is intentionally omitted for new accounts.
     }
 
-    // TODO: Replace with your real sign-up request / server action.
     if (onSubmit) {
-      void onSubmit(user)
+      await onSubmit(user)
+      return
     }
+
+    setIsPending(true)
+    const { error } = await authClient.signUp.email({
+      name: user.name,
+      email: user.email,
+      password,
+      image: user.image,
+      role: user.role,
+      ...(user.role === "vendor" && user.businessName
+        ? { businessName: user.businessName }
+        : {}),
+      callbackURL: "/",
+    } as Parameters<typeof authClient.signUp.email>[0])
+    setIsPending(false)
+
+    if (error) {
+      setError(error.message ?? "Unable to create account.")
+    }
+  }
+
+  async function handleGoogleSignUp() {
+    setError(null)
+    await authClient.signIn.social({
+      provider: "google",
+      callbackURL: "/",
+    })
   }
 
   return (
@@ -66,7 +144,7 @@ export function SignUpForm({ onSubmit }: SignUpFormProps) {
       </CardHeader>
 
       <form onSubmit={handleSubmit}>
-        <CardContent>
+        <CardContent className="space-y-4">
           <FieldGroup>
             <TextField
               label="Full name"
@@ -85,14 +163,39 @@ export function SignUpForm({ onSubmit }: SignUpFormProps) {
               required
             />
             <TextField
-              label="Profile image URL"
-              name="image"
-              type="url"
-              placeholder="https://example.com/avatar.png"
-              description="A square image works best."
-              autoComplete="url"
+              label="Password"
+              name="password"
+              type="password"
+              placeholder="Create a password"
+              autoComplete="new-password"
               required
             />
+            <TextField
+              label="Confirm password"
+              name="confirmPassword"
+              type="password"
+              placeholder="Re-enter your password"
+              autoComplete="new-password"
+              required
+            />
+
+            <Field>
+              <FieldLabel htmlFor="profile-image-upload">Profile picture</FieldLabel>
+              <Input
+                id="profile-image-upload"
+                type="file"
+                accept="image/*"
+                onChange={handleImageUpload}
+                disabled={isUploading}
+              />
+              {imageUrl ? (
+                <p className="text-sm text-muted-foreground">Image uploaded.</p>
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Please upload a profile picture to continue.
+                </p>
+              )}
+            </Field>
 
             <RoleSelector value={role} onValueChange={setRole} />
 
@@ -108,11 +211,30 @@ export function SignUpForm({ onSubmit }: SignUpFormProps) {
               />
             )}
           </FieldGroup>
+          {error ? <p className="text-sm text-destructive">{error}</p> : null}
         </CardContent>
 
         <CardFooter className="flex-col items-stretch gap-3">
-          <Button type="submit" size="lg" className="w-full">
-            Create account
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full"
+            disabled={isPending || isUploading}
+          >
+            {isUploading
+              ? "Uploading image..."
+              : isPending
+                ? "Creating account..."
+                : "Create account"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            className="w-full"
+            onClick={handleGoogleSignUp}
+          >
+            Sign up with Google
           </Button>
           <p className="text-center text-sm text-muted-foreground">
             Already have an account?{" "}

@@ -61,17 +61,17 @@ const ItemDetailsPage = ({ params }: PageProps<"/menu/[id]">) => {
       return failure("Please choose today or a future delivery date.", prevState)
     }
 
-    const itemsResult = await fetchAllItems()
-    if (!itemsResult.ok) {
-      return failure("Could not verify the item. Please try again.", prevState)
+    const itemResult = await fetchItem(itemId)
+    if (!itemResult.ok) {
+      return failure(
+        itemResult.reason === "not-found"
+          ? "This item is no longer available."
+          : "Could not verify the item. Please try again.",
+        prevState
+      )
     }
 
-    const item = itemsResult.items.find(
-      (candidate) => candidate._id === itemId || candidate.id === itemId
-    )
-    if (!item) {
-      return failure("This item is no longer available.", prevState)
-    }
+    const item = itemResult.item
 
     const order: IOrders = {
       itemId: item._id ?? item.id ?? itemId,
@@ -125,9 +125,11 @@ async function ItemDetails({
   ) => Promise<PlaceOrderFormState>
 }) {
   const { id } = await params
-  const result = await fetchAllItems()
+  const result = await fetchItem(id)
 
   if (!result.ok) {
+    if (result.reason === "not-found") notFound()
+
     return (
       <NoticeCard
         title="Item unavailable"
@@ -136,11 +138,7 @@ async function ItemDetails({
     )
   }
 
-  const item = result.items.find(
-    (candidate) => candidate._id === id || candidate.id === id
-  )
-
-  if (!item) notFound()
+  const item = result.item
 
   const session = await auth.api.getSession({ headers: await headers() })
   const user = session?.user as { id?: string; role?: string } | undefined
@@ -248,15 +246,18 @@ function formatDate(value: string) {
   })
 }
 
-async function fetchAllItems(): Promise<
-  { ok: true; items: MenuItemRecord[] } | { ok: false }
-> {
-  if (!BASE_API_URL) return { ok: false }
+type FetchItemResult =
+  | { ok: true; item: MenuItemRecord }
+  | { ok: false; reason: "not-found" | "error" }
+
+async function fetchItem(id: string): Promise<FetchItemResult> {
+  if (!BASE_API_URL) return { ok: false, reason: "error" }
 
   try {
-    const response = await fetch(`${BASE_API_URL}/items`)
+    const response = await fetch(`${BASE_API_URL}/items/${encodeURIComponent(id)}`)
 
-    if (!response.ok) return { ok: false }
+    if (response.status === 404) return { ok: false, reason: "not-found" }
+    if (!response.ok) return { ok: false, reason: "error" }
 
     const payload: unknown = await response.json()
     const root =
@@ -267,23 +268,18 @@ async function fetchAllItems(): Promise<
       typeof root?.data === "object" && root.data !== null
         ? (root.data as Record<string, unknown>)
         : null
-    const list =
-      (Array.isArray(payload) && payload) ||
-      (Array.isArray(root?.items) && root.items) ||
-      (Array.isArray(root?.data) && root.data) ||
-      (Array.isArray(nested?.items) && nested.items) ||
-      []
 
-    return {
-      ok: true,
-      items: list.filter((item): item is MenuItemRecord => isMenuItemRecord(item)),
-    }
+    const item = [payload, root?.item, root?.data, nested?.item].find(isMenuItemRecord)
+
+    return item
+      ? { ok: true, item }
+      : { ok: false, reason: "error" }
   } catch {
-    return { ok: false }
+    return { ok: false, reason: "error" }
   }
 }
 
-function isMenuItemRecord(value: unknown): boolean {
+function isMenuItemRecord(value: unknown): value is MenuItemRecord {
   if (typeof value !== "object" || value === null) return false
 
   const item = value as Record<string, unknown>

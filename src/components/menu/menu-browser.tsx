@@ -1,6 +1,7 @@
 "use client"
 
 import Image from "next/image"
+import Link from "next/link"
 import { useMemo, useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -16,7 +17,7 @@ import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
 import type { IMenuItem } from "@/lib/types/all-types"
 
-export type MenuItemRecord = IMenuItem & { _id?: string }
+export type MenuItemRecord = IMenuItem & { _id?: string; id?: string }
 
 export function MenuBrowser({ items }: { items: MenuItemRecord[] }) {
   const [query, setQuery] = useState("")
@@ -95,53 +96,56 @@ export function MenuBrowser({ items }: { items: MenuItemRecord[] }) {
 
 function MenuItemCard({ item }: { item: MenuItemRecord }) {
   const hasImage = /^https?:\/\//.test(item.images)
+  const itemId = item._id ?? item.id
 
   return (
-    <Card className="h-full">
-      {hasImage ? (
-        <Image
-          unoptimized
-          src={item.images}
-          alt={item.itemName}
-          width={640}
-          height={360}
-          className="h-44 w-full bg-muted object-cover"
-        />
-      ) : (
-        <div className="flex h-44 items-center justify-center bg-muted text-sm text-muted-foreground">
-          No image available
-        </div>
-      )}
-
-      <CardHeader>
-        <div className="flex items-start justify-between gap-3">
-          <CardTitle>{item.itemName}</CardTitle>
-          <span className={statusClassName(item.status)}>{item.status}</span>
-        </div>
-        <CardDescription>{item.category}</CardDescription>
-      </CardHeader>
-
-      <CardContent className="space-y-4">
-        <p className="line-clamp-3 text-sm text-muted-foreground">{item.description}</p>
-        <Separator />
-        <dl className="grid grid-cols-2 gap-3 text-sm">
-          <div>
-            <dt className="text-muted-foreground">Price</dt>
-            <dd className="font-medium">${item.price.toFixed(2)}</dd>
+    <Link href={`/menu/${itemId}`} className="block h-full">
+      <Card className="h-full">
+        {hasImage ? (
+          <Image
+            unoptimized
+            src={item.images}
+            alt={item.itemName}
+            width={640}
+            height={360}
+            className="h-44 w-full bg-muted object-cover"
+          />
+        ) : (
+          <div className="flex h-44 items-center justify-center bg-muted text-sm text-muted-foreground">
+            No image available
           </div>
-          <div>
-            <dt className="text-muted-foreground">Location</dt>
-            <dd className="font-medium">{item.location}</dd>
-          </div>
-        </dl>
-      </CardContent>
+        )}
 
-      <CardFooter className="mt-auto">
-        <p className="text-xs text-muted-foreground">
-          Added {formatDate(item.createdAt)}
-        </p>
-      </CardFooter>
-    </Card>
+        <CardHeader>
+          <div className="flex items-start justify-between gap-3">
+            <CardTitle>{item.itemName}</CardTitle>
+            <span className={statusClassName(item.status)}>{item.status}</span>
+          </div>
+          <CardDescription>{item.category}</CardDescription>
+        </CardHeader>
+
+        <CardContent className="space-y-4">
+          <p className="line-clamp-3 text-sm text-muted-foreground">{item.description}</p>
+          <Separator />
+          <dl className="grid grid-cols-2 gap-3 text-sm">
+            <div>
+              <dt className="text-muted-foreground">Price</dt>
+              <dd className="font-medium">${item.price.toFixed(2)}</dd>
+            </div>
+            <div>
+              <dt className="text-muted-foreground">Location</dt>
+              <dd className="font-medium">{item.location}</dd>
+            </div>
+          </dl>
+        </CardContent>
+
+        <CardFooter className="mt-auto">
+          <p className="text-xs text-muted-foreground">
+            Added {formatDate(item.createdAt)}
+          </p>
+        </CardFooter>
+      </Card>
+    </Link>
   )
 }
 

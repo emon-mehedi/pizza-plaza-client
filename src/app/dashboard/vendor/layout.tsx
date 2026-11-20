@@ -1,7 +1,10 @@
 import type { ReactNode } from "react"
 
-import { DashboardShell } from "@/components/dashboard/dashboard-shell"
+import { DashboardGuard } from "@/components/dashboard/dashboard-guard"
+
+// The guard reads the session at request time.
+export const instant = false
 
 export default function VendorDashboardLayout({ children }: { children: ReactNode }) {
-  return <DashboardShell role="vendor">{children}</DashboardShell>
+  return <DashboardGuard role="vendor">{children}</DashboardGuard>
 }

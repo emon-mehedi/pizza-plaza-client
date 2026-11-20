@@ -188,9 +188,6 @@ async function ItemDetails({
                 <CardTitle className="text-2xl">{item.itemName}</CardTitle>
                 <CardDescription>{item.category}</CardDescription>
               </div>
-              <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-medium capitalize text-primary">
-                {item.status}
-              </span>
             </div>
           </CardHeader>
 
@@ -201,7 +198,6 @@ async function ItemDetails({
               <Detail label="Price" value={`$${item.price.toFixed(2)}`} />
               <Detail label="Location" value={item.location} />
               <Detail label="Added" value={formatDate(item.createdAt)} />
-              <Detail label="Item ID" value={itemId} />
             </dl>
           </CardContent>
         </Card>

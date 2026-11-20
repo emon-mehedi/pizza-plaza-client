@@ -22,20 +22,20 @@ const socialLinks = [
 
 export function Footer() {
   return (
-    <footer className="border-t bg-muted/30">
+    <footer className="border-t border-white/10 bg-neutral-950 text-neutral-100">
       <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:grid-cols-2 lg:grid-cols-4">
         <div className="space-y-3">
           <div className="flex items-center gap-2 font-semibold">
-            <Pizza className="size-5 text-orange-500" /> PizzaHub
+            <Pizza className="size-5 text-orange-500" /> PizzaPlaza
           </div>
-          <p className="max-w-xs text-sm text-muted-foreground">
+          <p className="max-w-xs text-sm text-neutral-300">
             Good pizza, great vendors and a simple way to order your favourites.
           </p>
-          <div className="space-y-1 text-xs text-muted-foreground">
+          <div className="space-y-1 text-xs text-neutral-300">
             <p className="flex items-center gap-2">
               <Mail className="size-3" />
               <a href="mailto:hello@pizzahub.example" className="hover:text-foreground">
-                hello@pizzahub.example
+                pizza@plaza.com
               </a>
             </p>
             <p className="flex items-center gap-2">
@@ -46,7 +46,7 @@ export function Footer() {
 
         <div>
           <p className="mb-3 text-sm font-medium">Explore</p>
-          <ul className="space-y-2 text-sm text-muted-foreground">
+          <ul className="space-y-2 text-sm text-neutral-300">
             {exploreLinks.map((link) => (
               <li key={link.href}>
                 <Link href={link.href} className="hover:text-foreground">
@@ -59,7 +59,7 @@ export function Footer() {
 
         <div>
           <p className="mb-3 text-sm font-medium">Account</p>
-          <ul className="space-y-2 text-sm text-muted-foreground">
+          <ul className="space-y-2 text-sm text-neutral-300">
             {accountLinks.map((link) => (
               <li key={link.href}>
                 <Link href={link.href} className="hover:text-foreground">
@@ -80,20 +80,29 @@ export function Footer() {
                 target="_blank"
                 rel="noreferrer"
                 aria-label={link.label}
-                className="flex size-8 items-center justify-center rounded-full border text-muted-foreground transition-colors hover:border-foreground hover:text-foreground"
+                className="flex size-8 items-center justify-center rounded-full border text-neutral-300 transition-colors hover:border-foreground hover:text-foreground"
               >
                 <SocialIcon name={link.icon} />
               </a>
             ))}
           </div>
-          <p className="mt-3 text-xs text-muted-foreground">
+          <p className="mt-3 text-xs text-neutral-300">
             Questions? Reach us any day, 9am–10pm.
           </p>
         </div>
       </div>
 
-      <div className="border-t px-4 py-5 text-center text-xs text-muted-foreground">
-        © PizzaHub. All rights reserved.
+      <div className="border-t px-4 py-5 text-center text-xs text-neutral-300">
+        © PizzaPlaza. All rights reserved. Made by{" "}
+        <a
+          href="https://github.com/emon-mehedi"
+          target="_blank"
+          rel="noreferrer"
+          className="underline underline-offset-2 hover:text-foreground"
+        >
+          Mehedi Emon
+        </a>
+        .
       </div>
     </footer>
   )

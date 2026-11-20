@@ -5,7 +5,6 @@ import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { useMemo, useState } from "react"
 
-import { StatusBadge } from "@/components/dashboard/status-badge"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -214,43 +213,41 @@ function MenuItemCard({ item }: { item: MenuItemRecord }) {
 
   return (
     <Link href={`/menu/${itemId}`} className="block h-full">
-      <Card className="h-full">
-        {hasImage ? (
-          <Image
-            unoptimized
-            src={item.images}
-            alt={item.itemName}
-            width={640}
-            height={360}
-            className="h-44 w-full bg-muted object-cover"
-          />
-        ) : (
-          <div className="flex h-44 items-center justify-center bg-muted text-sm text-muted-foreground">
-            No image available
-          </div>
-        )}
+      <Card className="group/card h-full overflow-hidden rounded-2xl shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-md hover:ring-1 hover:ring-orange-500/30">
+        <div className="relative">
+          {hasImage ? (
+            <Image
+              unoptimized
+              src={item.images}
+              alt={item.itemName}
+              width={640}
+              height={360}
+              className="h-64 w-full bg-muted object-cover transition-transform duration-500 group-hover/card:scale-105"
+            />
+          ) : (
+            <div className="flex h-64 items-center justify-center bg-muted text-sm text-muted-foreground">
+              No image available
+            </div>
+          )}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+          {item.category ? (
+            <span className="absolute top-3 left-3 rounded-full bg-black/40 px-3 py-1 text-xs font-medium text-white backdrop-blur-md">
+              {item.category}
+            </span>
+          ) : null}
+        </div>
 
-        <CardHeader>
-          <div className="flex items-start justify-between gap-3">
-            <CardTitle>{item.itemName}</CardTitle>
-            <StatusBadge status={item.status} kind="item" />
-          </div>
-          <CardDescription>{item.category}</CardDescription>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-lg leading-snug">{item.itemName}</CardTitle>
+          <CardDescription>{item.location}</CardDescription>
         </CardHeader>
 
-        <CardContent className="space-y-4">
-          <p className="line-clamp-3 text-sm text-muted-foreground">{item.description}</p>
+        <CardContent className="space-y-3">
+          <p className="line-clamp-2 text-sm text-muted-foreground">{item.description}</p>
           <Separator />
-          <dl className="grid grid-cols-2 gap-3 text-sm">
-            <div>
-              <dt className="text-muted-foreground">Price</dt>
-              <dd className="font-medium">${item.price.toFixed(2)}</dd>
-            </div>
-            <div>
-              <dt className="text-muted-foreground">Location</dt>
-              <dd className="font-medium">{item.location}</dd>
-            </div>
-          </dl>
+          <p className="text-xl font-semibold text-orange-700 dark:text-orange-400">
+            ${item.price.toFixed(2)}
+          </p>
         </CardContent>
 
         <CardFooter className="mt-auto">

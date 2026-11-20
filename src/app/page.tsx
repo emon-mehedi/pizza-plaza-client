@@ -2,7 +2,6 @@ import Image from "next/image"
 import Link from "next/link"
 import { Suspense } from "react"
 import {
-  ArrowRight,
   BadgeCheck,
   Heart,
   MapPin,
@@ -12,6 +11,7 @@ import {
   Truck,
 } from "lucide-react"
 
+import { HeroBanner } from "@/components/home/hero-banner"
 import { NoticeCard } from "@/components/notice-card"
 import { buttonVariants } from "@/components/ui/button"
 import {
@@ -67,34 +67,7 @@ const HOW_STEPS = [
 export default function Home() {
   return (
     <main className="flex-1">
-      <section className="animate-in fade-in slide-in-from-bottom-4 bg-gradient-to-br from-orange-500 via-orange-600 to-red-600 px-4 py-20 text-white duration-700">
-        <div className="mx-auto max-w-5xl text-center">
-          <p className="mb-4 text-sm font-medium tracking-widest uppercase opacity-90">
-            Welcome to PizzaHub
-          </p>
-          <h1 className="text-4xl font-bold tracking-tight sm:text-6xl">
-            Fresh pizza, right to your door
-          </h1>
-          <p className="mx-auto mt-5 max-w-2xl text-lg opacity-90">
-            Discover local vendors, explore their menus and order your favourite
-            slices in a few clicks.
-          </p>
-          <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link
-              href="/menu"
-              className={buttonVariants({ variant: "secondary", size: "lg" })}
-            >
-              Browse the menu <ArrowRight className="size-4" />
-            </Link>
-            <Link
-              href="/sign-up"
-              className={buttonVariants({ variant: "outline", size: "lg" })}
-            >
-              Sell with PizzaHub
-            </Link>
-          </div>
-        </div>
-      </section>
+      <HeroBanner />
 
       <section className="mx-auto max-w-7xl px-4 py-16">
         <div className="animate-in fade-in slide-in-from-bottom-4 mb-8 delay-150 duration-700 fill-mode-both">

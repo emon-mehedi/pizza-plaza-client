@@ -134,14 +134,39 @@ export function Navbar() {
       <div className="mx-auto flex h-14 w-full max-w-6xl items-center justify-between gap-4 px-4">
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center">
-            <Image
-              src="/images/logo.jpg"
-              alt="PizzaHub"
-              width={120}
-              height={40}
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 260 56"
+              width="260"
+              height="56"
+              fill="none"
               className="h-8 w-auto"
-              priority
-            />
+              aria-hidden="true"
+            >
+              <defs>
+                <linearGradient id="pizzaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#FF512F" />
+                  <stop offset="100%" stopColor="#F09819" />
+                </linearGradient>
+              </defs>
+              <g transform="translate(6,5)">
+                <rect x="0" y="0" width="46" height="46" rx="14" fill="url(#pizzaGrad)" />
+                <g transform="translate(8,7)">
+                  <path d="M4 9 C11 3, 21 3, 28 9 L16 32 Z" fill="#FFF3E0" />
+                  <path d="M7 11 C12 7, 20 7, 25 11 L22 17 C21 19, 19 19, 19 16 L16 28 L12 18 C11 20, 9 20, 9 17 Z" fill="#FFD166" />
+                  <circle cx="14" cy="13" r="2.2" fill="#D90429" />
+                  <circle cx="20" cy="14" r="1.9" fill="#D90429" />
+                  <circle cx="16" cy="21" r="2.1" fill="#D90429" />
+                </g>
+              </g>
+              <g transform="translate(62,34)">
+                <text fontFamily="Poppins, Inter, system-ui, -apple-system, sans-serif" fontSize="26" fontWeight="800" letterSpacing="-0.8">
+                  <tspan fill="#1E293B">Pizza</tspan>
+                  <tspan fill="#FF512F">Plaza</tspan>
+                </text>
+                <path d="M72 6 Q102 10 132 6" stroke="#F09819" strokeWidth="2.5" strokeLinecap="round" fill="none" />
+              </g>
+            </svg>
           </Link>
           <nav className="flex items-center gap-4">
             <Link href="/" className={navLinkClass("/")}>

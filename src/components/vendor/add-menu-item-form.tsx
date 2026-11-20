@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
+import { MENU_CATEGORIES } from "@/lib/menu-categories"
 
 export type AddMenuItemFormState = {
   status: "idle" | "success" | "error"
@@ -51,13 +52,7 @@ export function AddMenuItemForm({ action, initialState }: AddMenuItemFormProps) 
               placeholder="Margherita Pizza"
               required
             />
-            <TextField
-              label="Category"
-              name="category"
-              type="text"
-              placeholder="Pizza"
-              required
-            />
+            <CategoryField />
             <div className="grid gap-4 sm:grid-cols-2">
               <TextField
                 label="Price"
@@ -108,6 +103,32 @@ export function AddMenuItemForm({ action, initialState }: AddMenuItemFormProps) 
         </CardFooter>
       </form>
     </Card>
+  )
+}
+
+function CategoryField() {
+  const id = useId()
+
+  return (
+    <Field>
+      <FieldLabel htmlFor={id}>Category</FieldLabel>
+      <select
+        id={id}
+        name="category"
+        defaultValue=""
+        required
+        className="h-8 w-full min-w-0 cursor-pointer rounded-lg border border-input bg-transparent px-2.5 py-1 text-base outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30"
+      >
+        <option value="" disabled>
+          Select a category
+        </option>
+        {MENU_CATEGORIES.map((category) => (
+          <option key={category} value={category}>
+            {category}
+          </option>
+        ))}
+      </select>
+    </Field>
   )
 }
 

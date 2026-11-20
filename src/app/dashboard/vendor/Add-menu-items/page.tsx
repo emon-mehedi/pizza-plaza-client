@@ -1,4 +1,5 @@
 import { headers } from "next/headers"
+import { redirect } from "next/navigation"
 
 import {
   AddMenuItemForm,
@@ -6,6 +7,7 @@ import {
 } from "@/components/vendor/add-menu-item-form"
 import { auth } from "@/lib/auth"
 import { BASE_API_URL } from "@/lib/base-url"
+import { isMenuCategory } from "@/lib/menu-categories"
 import type { IMenuItem } from "@/lib/types/all-types"
 
 const INITIAL_STATE: AddMenuItemFormState = { status: "idle", message: null, key: 0 }
@@ -60,6 +62,14 @@ const AddMenuItemPage = () => {
       }
     }
 
+    if (!isMenuCategory(category)) {
+      return {
+        status: "error",
+        message: "Please choose a valid category.",
+        key: prevState.key,
+      }
+    }
+
     const item: IMenuItem = {
       vendorId: user.id,
       itemName,
@@ -87,11 +97,6 @@ const AddMenuItemPage = () => {
         }
       }
 
-      return {
-        status: "success",
-        message: `"${itemName}" was submitted for review.`,
-        key: prevState.key + 1,
-      }
     } catch {
       return {
         status: "error",
@@ -99,6 +104,9 @@ const AddMenuItemPage = () => {
         key: prevState.key,
       }
     }
+
+    // redirect() throws internally, so it must run outside the try/catch above.
+    redirect("/dashboard/vendor/my-menu-items")
   }
 
   return (

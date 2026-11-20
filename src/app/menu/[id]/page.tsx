@@ -17,6 +17,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { apiFetch } from "@/lib/api-server"
 import { auth } from "@/lib/auth"
 import { BASE_API_URL } from "@/lib/base-url"
 import type { IMenuItem, IOrders } from "@/lib/types/all-types"
@@ -85,14 +86,15 @@ const ItemDetailsPage = ({ params }: PageProps<"/menu/[id]">) => {
     }
 
     try {
-      const response = await fetch(`${BASE_API_URL}/orders`, {
+      const response = await apiFetch("/orders", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(order),
+        body: order,
+        withAuth: true,
       })
 
       if (!response.ok) {
-        return failure("Could not place your order. Please try again.", prevState)
+        const errorBody = (await response.json().catch(() => null)) as { message?: string } | null
+        return failure(errorBody?.message ?? "Could not place your order. Please try again.", prevState)
       }
 
       return {
@@ -254,7 +256,7 @@ async function fetchItem(id: string): Promise<FetchItemResult> {
   if (!BASE_API_URL) return { ok: false, reason: "error" }
 
   try {
-    const response = await fetch(`${BASE_API_URL}/items/${encodeURIComponent(id)}`)
+    const response = await apiFetch(`/items/${encodeURIComponent(id)}`)
 
     if (response.status === 404) return { ok: false, reason: "not-found" }
     if (!response.ok) return { ok: false, reason: "error" }

@@ -13,11 +13,12 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { apiFetch } from "@/lib/api-server"
 import { auth } from "@/lib/auth"
 import { BASE_API_URL } from "@/lib/base-url"
 import type { IOrders } from "@/lib/types/all-types"
 
-type OrderRecord = IOrders & { _id?: string }
+type OrderRecord = IOrders & { _id?: string; item?: ItemRecord }
 type ItemRecord = {
   _id?: string
   id?: string
@@ -68,8 +69,9 @@ async function CustomerOrders() {
     )
   }
 
+  // The API uses the JWT to decide which orders this customer may see.
   const [ordersPayload, itemsPayload] = await Promise.all([
-    fetchJson(`/orders?customerId=${encodeURIComponent(user.id)}`),
+    fetchJson("/orders", true),
     fetchJson("/items"),
   ])
 
@@ -106,7 +108,7 @@ async function CustomerOrders() {
       </p>
       <div className="grid gap-6 lg:grid-cols-2">
         {orders.map((order) => {
-          const item = items.get(order.itemId)
+          const item = order.item ?? items.get(order.itemId)
 
           return (
             <Card key={order._id ?? `${order.itemId}-${order.createdAt}`} className="h-full">
@@ -186,11 +188,11 @@ async function CustomerOrders() {
   )
 }
 
-async function fetchJson(path: string): Promise<unknown | null> {
+async function fetchJson(path: string, withAuth = false): Promise<unknown | null> {
   if (!BASE_API_URL) return null
 
   try {
-    const response = await fetch(`${BASE_API_URL}${path}`)
+    const response = await apiFetch(path, { withAuth })
     return response.ok ? await response.json() : null
   } catch {
     return null
@@ -214,6 +216,26 @@ function toArray(payload: unknown): unknown[] {
   if (nested && Array.isArray(nested.items)) return nested.items
 
   return []
+}
+
+function normalizeItem(value: unknown): ItemRecord | undefined {
+  if (typeof value !== "object" || value === null) return undefined
+
+  const item = value as Record<string, unknown>
+  if (
+    typeof item.itemName !== "string" ||
+    (typeof item._id !== "string" && typeof item.id !== "string")
+  ) {
+    return undefined
+  }
+
+  return {
+    _id: typeof item._id === "string" ? item._id : undefined,
+    id: typeof item.id === "string" ? item.id : undefined,
+    itemName: item.itemName,
+    images: typeof item.images === "string" ? item.images : "",
+    price: typeof item.price === "number" ? item.price : undefined,
+  }
 }
 
 function normalizeOrders(payload: unknown): OrderRecord[] {
@@ -241,6 +263,7 @@ function normalizeOrders(payload: unknown): OrderRecord[] {
         status: ORDER_STATUSES.includes(order.status as IOrders["status"])
           ? (order.status as IOrders["status"])
           : "pending",
+        item: normalizeItem(order.item),
       },
     ]
   })
@@ -248,25 +271,8 @@ function normalizeOrders(payload: unknown): OrderRecord[] {
 
 function normalizeItems(payload: unknown): ItemRecord[] {
   return toArray(payload).flatMap((value) => {
-    if (typeof value !== "object" || value === null) return []
-
-    const item = value as Record<string, unknown>
-    if (
-      typeof item.itemName !== "string" ||
-      (typeof item._id !== "string" && typeof item.id !== "string")
-    ) {
-      return []
-    }
-
-    return [
-      {
-        _id: typeof item._id === "string" ? item._id : undefined,
-        id: typeof item.id === "string" ? item.id : undefined,
-        itemName: item.itemName,
-        images: typeof item.images === "string" ? item.images : "",
-        price: typeof item.price === "number" ? item.price : undefined,
-      },
-    ]
+    const item = normalizeItem(value)
+    return item ? [item] : []
   })
 }
 

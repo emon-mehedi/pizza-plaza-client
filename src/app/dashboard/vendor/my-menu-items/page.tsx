@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
 import { auth } from "@/lib/auth"
+import { apiFetch } from "@/lib/api-server"
 import { BASE_API_URL } from "@/lib/base-url"
 import type { IMenuItem } from "@/lib/types/all-types"
 
@@ -100,7 +101,7 @@ async function fetchVendorItems(): Promise<
   if (!BASE_API_URL) return { ok: false }
 
   try {
-    const response = await fetch(`${BASE_API_URL}/items`)
+    const response = await apiFetch("/vendor/items", { withAuth: true })
 
     if (!response.ok) return { ok: false }
 

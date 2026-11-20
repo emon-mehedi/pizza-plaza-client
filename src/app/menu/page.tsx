@@ -7,6 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
+import { apiFetch } from "@/lib/api-server"
 import { BASE_API_URL } from "@/lib/base-url"
 import type { IMenuItem } from "@/lib/types/all-types"
 
@@ -57,7 +58,7 @@ async function fetchAllItems(): Promise<
   if (!BASE_API_URL) return { ok: false }
 
   try {
-    const response = await fetch(`${BASE_API_URL}/items`)
+    const response = await apiFetch("/items")
 
     if (!response.ok) return { ok: false }
 

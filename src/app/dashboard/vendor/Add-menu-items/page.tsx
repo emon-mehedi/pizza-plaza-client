@@ -6,6 +6,7 @@ import {
   type AddMenuItemFormState,
 } from "@/components/vendor/add-menu-item-form"
 import { auth } from "@/lib/auth"
+import { apiFetch } from "@/lib/api-server"
 import { BASE_API_URL } from "@/lib/base-url"
 import { isMenuCategory } from "@/lib/menu-categories"
 import type { IMenuItem } from "@/lib/types/all-types"
@@ -83,16 +84,17 @@ const AddMenuItemPage = () => {
     }
 
     try {
-      const response = await fetch(`${BASE_API_URL}/items`, {
+      const response = await apiFetch("/items", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(item),
+        body: item,
+        withAuth: true,
       })
 
       if (!response.ok) {
+        const errorBody = (await response.json().catch(() => null)) as { message?: string } | null
         return {
           status: "error",
-          message: `Could not save the item (status ${response.status}). Please try again.`,
+          message: errorBody?.message ?? "Could not save the item. Please try again.",
           key: prevState.key,
         }
       }

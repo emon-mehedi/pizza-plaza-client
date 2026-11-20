@@ -1,8 +1,11 @@
 import { betterAuth } from "better-auth";
 import { MongoClient } from "mongodb";
 import { mongodbAdapter } from "@better-auth/mongo-adapter";
+import { jwt } from "better-auth/plugins";
 
 const mongoUri = process.env.BETTER_AUTH_DB_URL ?? process.env.DB_URI;
+// Issuer/audience must match BETTER_AUTH_URL on the Express server exactly.
+const authOrigin = (process.env.BETTER_AUTH_URL ?? "").replace(/\/+$/, "");
 
 if (!mongoUri) {
   throw new Error("Missing MongoDB connection string (BETTER_AUTH_DB_URL or DB_URI)");
@@ -17,6 +20,16 @@ export const auth = betterAuth({
     enabled: true,
   },
   baseURL: process.env.BETTER_AUTH_URL,
+  // The JWT is sent to the Express API as: Authorization: Bearer <token>.
+  plugins: [
+    jwt({
+      jwt: {
+        issuer: authOrigin || undefined,
+        audience: authOrigin || undefined,
+        expirationTime: "1h",
+      },
+    }),
+  ],
   user: {
     additionalFields: {
       role: {

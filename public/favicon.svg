@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" fill="none">
+  <defs>
+    <!-- Warm Appetizing Gradient for Favicon Badge -->
+    <linearGradient id="pizzaFaviconGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF512F" />
+      <stop offset="100%" stop-color="#F09819" />
+    </linearGradient>
+  </defs>
+
+  <!-- Rounded Square Badge -->
+  <rect x="2" y="2" width="60" height="60" rx="18" fill="url(#pizzaFaviconGrad)" />
+
+  <!-- Stylized Pizza Slice (Scaled for Small Tab Visibility) -->
+  <g transform="translate(11, 9)">
+    <!-- Crust -->
+    <path d="M5 11 C14 3, 28 3, 37 11 L21 43 Z" fill="#FFF3E0" />
+    <!-- Cheese & Melting Drip -->
+    <path d="M9 14 C15 9, 27 9, 33 14 L29 22 C27.5 25, 25 25, 25 21 L21 38 L16 24 C14.5 27, 12 27, 12 22 Z" fill="#FFD166" />
+    <!-- Pepperoni Slices -->
+    <circle cx="18" cy="17" r="3" fill="#D90429" />
+    <circle cx="26" cy="18.5" r="2.6" fill="#D90429" />
+    <circle cx="21" cy="28" r="2.8" fill="#D90429" />
+  </g>
+</svg>

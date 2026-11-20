@@ -1,7 +1,9 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useState, type ChangeEvent, type FormEvent } from "react"
+import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -15,6 +17,7 @@ import {
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { authClient } from "@/lib/auth-client"
+import { SIGNUP_SUCCESS_KEY } from "@/lib/signup-toast"
 import type { IUser } from "@/lib/types/all-types"
 
 import { RoleSelector, type SignUpRole } from "./role-selector"
@@ -33,6 +36,7 @@ type SignUpFormProps = {
 }
 
 export function SignUpForm({ onSubmit }: SignUpFormProps) {
+  const router = useRouter()
   const [role, setRole] = useState<SignUpRole>(DEFAULTS.role)
   const [imageUrl, setImageUrl] = useState("")
   const [error, setError] = useState<string | null>(null)
@@ -123,15 +127,29 @@ export function SignUpForm({ onSubmit }: SignUpFormProps) {
 
     if (error) {
       setError(error.message ?? "Unable to create account.")
+      return
     }
+
+    sessionStorage.removeItem(SIGNUP_SUCCESS_KEY)
+    toast.success("Account created successfully!")
+    router.push("/")
+    router.refresh()
   }
 
   async function handleGoogleSignUp() {
     setError(null)
-    await authClient.signIn.social({
+    // The Google flow reloads the page, so persist the toast until we land on "/".
+    sessionStorage.setItem(SIGNUP_SUCCESS_KEY, "1")
+
+    const { error } = await authClient.signIn.social({
       provider: "google",
       callbackURL: "/",
     })
+
+    if (error) {
+      sessionStorage.removeItem(SIGNUP_SUCCESS_KEY)
+      setError(error.message ?? "Unable to sign up with Google.")
+    }
   }
 
   return (

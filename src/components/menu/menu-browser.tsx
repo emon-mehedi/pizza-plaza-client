@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Separator } from "@/components/ui/separator"
+import { MENU_CATEGORIES } from "@/lib/menu-categories"
 import type { IMenuItem } from "@/lib/types/all-types"
 
 export type MenuItemRecord = IMenuItem & { _id?: string; id?: string }
@@ -34,10 +35,15 @@ export function MenuBrowser({ items }: { items: MenuItemRecord[] }) {
   const [maxPrice, setMaxPrice] = useState("")
   const [sort, setSort] = useState<SortOption>("newest")
 
-  const categories = useMemo(
-    () => Array.from(new Set(items.map((item) => item.category))).sort(),
-    [items]
-  )
+  const categories = useMemo(() => {
+    const known = new Set<string>(MENU_CATEGORIES)
+    const extra = Array.from(
+      new Set(items.map((item) => item.category).filter((category) => !known.has(category)))
+    ).sort()
+
+    // Always show the full catalogue, including categories with no items yet.
+    return [...MENU_CATEGORIES, ...extra]
+  }, [items])
   const locations = useMemo(
     () => Array.from(new Set(items.map((item) => item.location))).sort(),
     [items]

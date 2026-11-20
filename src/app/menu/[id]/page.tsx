@@ -1,7 +1,7 @@
 import Image from "next/image"
 import Link from "next/link"
 import { headers } from "next/headers"
-import { notFound } from "next/navigation"
+import { notFound, redirect } from "next/navigation"
 import { Suspense } from "react"
 
 import {
@@ -106,15 +106,12 @@ const ItemDetailsPage = ({ params }: PageProps<"/menu/[id]">) => {
         const errorBody = (await response.json().catch(() => null)) as { message?: string } | null
         return failure(errorBody?.message ?? "Could not place your order. Please try again.", prevState)
       }
-
-      return {
-        status: "success",
-        message: "Order placed! The vendor will review it shortly.",
-        key: prevState.key + 1,
-      }
     } catch {
       return failure("Could not reach the order service. Please try again.", prevState)
     }
+
+    // redirect() throws internally, so it must stay outside the try/catch above.
+    redirect("/menu")
   }
 
   return (

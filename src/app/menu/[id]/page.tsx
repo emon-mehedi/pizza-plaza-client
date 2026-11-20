@@ -8,6 +8,7 @@ import {
   PlaceOrderForm,
   type PlaceOrderFormState,
 } from "@/components/orders/place-order-form"
+import { NoticeCard } from "@/components/notice-card"
 import { buttonVariants } from "@/components/ui/button"
 import {
   Card,
@@ -297,17 +298,6 @@ function isMenuItemRecord(value: unknown): value is MenuItemRecord {
     typeof item.images === "string" &&
     typeof item.createdAt === "string" &&
     typeof item.status === "string"
-  )
-}
-
-function NoticeCard({ title, description }: { title: string; description: string }) {
-  return (
-    <Card className="mx-auto w-full max-w-lg">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-    </Card>
   )
 }
 

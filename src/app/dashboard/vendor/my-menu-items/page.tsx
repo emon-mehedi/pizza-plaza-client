@@ -3,6 +3,7 @@ import Link from "next/link"
 import { headers } from "next/headers"
 import { Suspense } from "react"
 
+import { NoticeCard } from "@/components/notice-card"
 import { buttonVariants } from "@/components/ui/button"
 import {
   Card,
@@ -55,6 +56,7 @@ async function VendorMenuItems() {
       <NoticeCard
         title="Vendor sign-in required"
         description="Sign in with a vendor account to see your menu items."
+        action={{ label: "Sign in", href: "/sign-in" }}
       />
     )
   }
@@ -66,6 +68,7 @@ async function VendorMenuItems() {
       <NoticeCard
         title="Could not load your items"
         description="The menu service is unavailable right now. Please try again later."
+        action={{ label: "Try again", href: "/dashboard/vendor/my-menu-items" }}
       />
     )
   }
@@ -77,6 +80,7 @@ async function VendorMenuItems() {
       <NoticeCard
         title="No menu items yet"
         description="Add your first item and it will show up here."
+        action={{ label: "Add menu item", href: "/dashboard/vendor/Add-menu-items" }}
       />
     )
   }
@@ -235,22 +239,6 @@ function isMenuItemRecord(value: unknown): boolean {
 
 function asArray(value: unknown): unknown[] | null {
   return Array.isArray(value) ? value : null
-}
-
-function NoticeCard({ title, description }: { title: string; description: string }) {
-  return (
-    <Card className="mx-auto w-full max-w-lg">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardFooter>
-        <Link href="/dashboard/vendor/Add-menu-items" className={buttonVariants()}>
-          Add menu item
-        </Link>
-      </CardFooter>
-    </Card>
-  )
 }
 
 function ItemsFallback() {

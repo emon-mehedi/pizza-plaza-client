@@ -1,12 +1,8 @@
 import { Suspense } from "react"
 
 import { MenuBrowser, type MenuItemRecord } from "@/components/menu/menu-browser"
-import {
-  Card,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
+import { NoticeCard } from "@/components/notice-card"
+import { Card, CardHeader } from "@/components/ui/card"
 import { apiFetch } from "@/lib/api-server"
 import { BASE_API_URL } from "@/lib/base-url"
 import type { IMenuItem } from "@/lib/types/all-types"
@@ -116,17 +112,6 @@ function isMenuItemRecord(value: unknown): boolean {
 
 function asArray(value: unknown): unknown[] | null {
   return Array.isArray(value) ? value : null
-}
-
-function NoticeCard({ title, description }: { title: string; description: string }) {
-  return (
-    <Card className="mx-auto w-full max-w-lg">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-    </Card>
-  )
 }
 
 function ItemsFallback() {

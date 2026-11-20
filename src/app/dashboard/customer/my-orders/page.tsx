@@ -13,6 +13,8 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
+import { NoticeCard } from "@/components/notice-card"
+import { StatusBadge } from "@/components/dashboard/status-badge"
 import { apiFetch } from "@/lib/api-server"
 import { auth } from "@/lib/auth"
 import { BASE_API_URL } from "@/lib/base-url"
@@ -65,6 +67,7 @@ async function CustomerOrders() {
       <NoticeCard
         title="Customer sign-in required"
         description="Sign in with a customer account to see your orders."
+        action={{ label: "Sign in", href: "/sign-in" }}
       />
     )
   }
@@ -80,6 +83,7 @@ async function CustomerOrders() {
       <NoticeCard
         title="Could not load your orders"
         description="The order service is unavailable right now. Please try again later."
+        action={{ label: "Try again", href: "/dashboard/customer/my-orders" }}
       />
     )
   }
@@ -93,6 +97,7 @@ async function CustomerOrders() {
       <NoticeCard
         title="No orders yet"
         description="Find something you like on the menu and place your first order."
+        action={{ label: "Browse menu", href: "/menu" }}
       />
     )
   }
@@ -118,7 +123,7 @@ async function CustomerOrders() {
                     <CardTitle>{item?.itemName ?? "Menu item"}</CardTitle>
                     <CardDescription>Ordered {formatDate(order.createdAt)}</CardDescription>
                   </div>
-                  <span className={statusClassName(order.status)}>{order.status}</span>
+                  <StatusBadge status={order.status} kind="order" />
                 </div>
               </CardHeader>
 
@@ -276,17 +281,6 @@ function normalizeItems(payload: unknown): ItemRecord[] {
   })
 }
 
-function statusClassName(status: IOrders["status"]) {
-  const styles: Record<IOrders["status"], string> = {
-    pending: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
-    accepted: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-    rejected: "bg-destructive/10 text-destructive",
-    cancelled: "bg-muted text-muted-foreground",
-  }
-
-  return `rounded-full px-2.5 py-1 text-xs font-medium capitalize ${styles[status]}`
-}
-
 function formatDate(value: string) {
   const normalized = /^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T00:00:00` : value
   const date = new Date(normalized)
@@ -297,22 +291,6 @@ function formatDate(value: string) {
     month: "short",
     day: "numeric",
   })
-}
-
-function NoticeCard({ title, description }: { title: string; description: string }) {
-  return (
-    <Card className="mx-auto w-full max-w-lg">
-      <CardHeader>
-        <CardTitle>{title}</CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardFooter>
-        <Link href="/menu" className={buttonVariants()}>
-          Browse menu
-        </Link>
-      </CardFooter>
-    </Card>
-  )
 }
 
 function OrdersFallback() {

@@ -1,25 +1,26 @@
-import Image from "next/image"
 import Link from "next/link"
+import { revalidatePath } from "next/cache"
 import { headers } from "next/headers"
 import { Suspense } from "react"
 
 import { NoticeCard } from "@/components/notice-card"
+import {
+  VendorItemList,
+  type VendorItemValues,
+} from "@/components/vendor/vendor-item-list"
 import { buttonVariants } from "@/components/ui/button"
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
   CardHeader,
-  CardTitle,
 } from "@/components/ui/card"
-import { Separator } from "@/components/ui/separator"
 import { auth } from "@/lib/auth"
 import { apiFetch } from "@/lib/api-server"
 import { BASE_API_URL } from "@/lib/base-url"
+import { isMenuCategory } from "@/lib/menu-categories"
 import type { IMenuItem } from "@/lib/types/all-types"
 
-type MenuItemRecord = IMenuItem & { _id?: string }
+type MenuItemRecord = IMenuItem & { id?: string; _id?: string }
 
 const MyMenuItemsPage = () => {
   return (
@@ -28,7 +29,7 @@ const MyMenuItemsPage = () => {
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">My menu items</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Every item you have added to your menu, all in one place.
+            Edit, hide or remove the items you have added to your menu.
           </p>
         </div>
         <Link
@@ -47,7 +48,6 @@ const MyMenuItemsPage = () => {
 }
 
 async function VendorMenuItems() {
-  // Session and backend URL are server-only, so this runs behind the Suspense boundary.
   const session = await auth.api.getSession({ headers: await headers() })
   const user = session?.user as { id?: string; role?: string } | undefined
 
@@ -73,7 +73,20 @@ async function VendorMenuItems() {
     )
   }
 
-  const items = result.items.filter((item) => item.vendorId === user.id)
+  const items = result.items
+    .filter((item) => item.vendorId === user.id)
+    .map((item) => ({
+      id: item.id ?? item._id ?? "",
+      itemName: item.itemName,
+      category: item.category,
+      description: item.description,
+      price: item.price,
+      location: item.location,
+      images: item.images,
+      status: item.status,
+      createdAt: item.createdAt,
+    }))
+    .filter((item) => item.id)
 
   if (items.length === 0) {
     return (
@@ -90,11 +103,12 @@ async function VendorMenuItems() {
       <p className="mb-4 text-sm text-muted-foreground">
         {items.length} {items.length === 1 ? "item" : "items"}
       </p>
-      <div className="grid gap-6 sm:grid-cols-2 xl:grid-cols-3">
-        {items.map((item) => (
-          <MenuItemCard key={item._id ?? `${item.itemName}-${item.createdAt}`} item={item} />
-        ))}
-      </div>
+      <VendorItemList
+        items={items}
+        onUpdate={updateItem}
+        onToggleAvailability={toggleAvailability}
+        onDelete={deleteItem}
+      />
     </>
   )
 }
@@ -106,100 +120,124 @@ async function fetchVendorItems(): Promise<
 
   try {
     const response = await apiFetch("/vendor/items", { withAuth: true })
-
     if (!response.ok) return { ok: false }
-
     return { ok: true, items: normalizeItems(await response.json()) }
   } catch {
     return { ok: false }
   }
 }
 
-function MenuItemCard({ item }: { item: MenuItemRecord }) {
-  const hasImage = /^https?:\/\//.test(item.images)
-
-  return (
-    <Card className="h-full">
-      {hasImage ? (
-        <Image
-          unoptimized
-          src={item.images}
-          alt={item.itemName}
-          width={640}
-          height={360}
-          className="h-44 w-full bg-muted object-cover"
-        />
-      ) : (
-        <div className="flex h-44 items-center justify-center bg-muted text-sm text-muted-foreground">
-          No image available
-        </div>
-      )}
-
-      <CardHeader>
-        <div className="flex items-start justify-between gap-3">
-          <CardTitle>{item.itemName}</CardTitle>
-          <span className={statusClassName(item.status)}>{item.status}</span>
-        </div>
-        <CardDescription>{item.category}</CardDescription>
-      </CardHeader>
-
-      <CardContent className="space-y-4">
-        <p className="line-clamp-3 text-sm text-muted-foreground">{item.description}</p>
-        <Separator />
-        <dl className="grid grid-cols-2 gap-3 text-sm">
-          <div>
-            <dt className="text-muted-foreground">Price</dt>
-            <dd className="font-medium">${item.price.toFixed(2)}</dd>
-          </div>
-          <div>
-            <dt className="text-muted-foreground">Location</dt>
-            <dd className="font-medium">{item.location}</dd>
-          </div>
-          <div className="col-span-2">
-            <dt className="text-muted-foreground">Added</dt>
-            <dd className="font-medium">{formatDate(item.createdAt)}</dd>
-          </div>
-        </dl>
-      </CardContent>
-
-      <CardFooter className="mt-auto">
-        <p className="text-xs text-muted-foreground">
-          Item ID: {item._id ?? "—"}
-        </p>
-      </CardFooter>
-    </Card>
-  )
+async function requireVendor(): Promise<boolean> {
+  const session = await auth.api.getSession({ headers: await headers() })
+  return session?.user?.role === "vendor"
 }
 
-function statusClassName(status: IMenuItem["status"]) {
-  const styles: Record<IMenuItem["status"], string> = {
-    pending: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
-    approved: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-    rejected: "bg-destructive/10 text-destructive",
-    inactive: "bg-muted text-muted-foreground",
+async function updateItem(itemId: string, values: VendorItemValues) {
+  "use server"
+
+  if (!(await requireVendor())) {
+    return { ok: false, message: "Only vendors can edit menu items." }
+  }
+  if (!isMenuCategory(values.category)) {
+    return { ok: false, message: "Please choose a valid category." }
+  }
+  if (!BASE_API_URL) {
+    return { ok: false, message: "The server is not configured." }
   }
 
-  return `rounded-full px-2.5 py-1 text-xs font-medium capitalize ${styles[status]}`
+  try {
+    const response = await apiFetch(`/items/${encodeURIComponent(itemId)}`, {
+      method: "PATCH",
+      body: values,
+      withAuth: true,
+    })
+
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as {
+        message?: string
+      } | null
+      return { ok: false, message: body?.message ?? "Could not update this item." }
+    }
+
+    revalidatePath("/dashboard/vendor/my-menu-items")
+    revalidatePath("/menu")
+    return { ok: true, message: "Menu item updated." }
+  } catch {
+    return { ok: false, message: "Could not reach the server." }
+  }
 }
 
-function formatDate(value: string) {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return "—"
+async function toggleAvailability(itemId: string, isActive: boolean) {
+  "use server"
 
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  })
+  if (!(await requireVendor())) {
+    return { ok: false, message: "Only vendors can manage menu items." }
+  }
+  if (!BASE_API_URL) {
+    return { ok: false, message: "The server is not configured." }
+  }
+
+  try {
+    const response = await apiFetch(
+      `/items/${encodeURIComponent(itemId)}/availability`,
+      { method: "PATCH", body: { isActive }, withAuth: true }
+    )
+
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as {
+        message?: string
+      } | null
+      return { ok: false, message: body?.message ?? "Could not update availability." }
+    }
+
+    revalidatePath("/dashboard/vendor/my-menu-items")
+    revalidatePath("/menu")
+    return { ok: true, message: isActive ? "Item is visible again." : "Item hidden." }
+  } catch {
+    return { ok: false, message: "Could not reach the server." }
+  }
+}
+
+async function deleteItem(itemId: string) {
+  "use server"
+
+  if (!(await requireVendor())) {
+    return { ok: false, message: "Only vendors can delete menu items." }
+  }
+  if (!BASE_API_URL) {
+    return { ok: false, message: "The server is not configured." }
+  }
+
+  try {
+    const response = await apiFetch(`/items/${encodeURIComponent(itemId)}`, {
+      method: "DELETE",
+      withAuth: true,
+    })
+
+    if (!response.ok) {
+      const body = (await response.json().catch(() => null)) as {
+        message?: string
+      } | null
+      return { ok: false, message: body?.message ?? "Could not delete this item." }
+    }
+
+    revalidatePath("/dashboard/vendor/my-menu-items")
+    revalidatePath("/menu")
+    return { ok: true, message: "Menu item deleted." }
+  } catch {
+    return { ok: false, message: "Could not reach the server." }
+  }
 }
 
 function normalizeItems(payload: unknown): MenuItemRecord[] {
-  const root = typeof payload === "object" && payload !== null
-    ? (payload as Record<string, unknown>)
-    : null
-  const nested = typeof root?.data === "object" && root.data !== null
-    ? (root.data as Record<string, unknown>)
-    : null
+  const root =
+    typeof payload === "object" && payload !== null
+      ? (payload as Record<string, unknown>)
+      : null
+  const nested =
+    typeof root?.data === "object" && root.data !== null
+      ? (root.data as Record<string, unknown>)
+      : null
 
   const list =
     asArray(payload) ??

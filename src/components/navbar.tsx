@@ -65,9 +65,12 @@ function UserMenu({
         aria-expanded={open}
       >
         {image ? (
-          <img
+          <Image
+            unoptimized
             src={image}
             alt={name || "Profile"}
+            width={28}
+            height={28}
             className="size-7 rounded-full object-cover"
           />
         ) : (

@@ -1,6 +1,6 @@
 import { cn } from "cn"
 
-type StatusKind = "item" | "order" | "payment"
+type StatusKind = "item" | "order" | "payment" | "plan"
 
 const ITEM_STYLES: Record<string, string> = {
   pending: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
@@ -22,10 +22,16 @@ const PAYMENT_STYLES: Record<string, string> = {
   failed: "bg-destructive/10 text-destructive",
 }
 
+const PLAN_STYLES: Record<string, string> = {
+  free: "bg-muted text-muted-foreground",
+  premium: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
+}
+
 const STYLES_BY_KIND: Record<StatusKind, Record<string, string>> = {
   item: ITEM_STYLES,
   order: ORDER_STYLES,
   payment: PAYMENT_STYLES,
+  plan: PLAN_STYLES,
 }
 
 // Small colored pill for menu item, order, or payment statuses.

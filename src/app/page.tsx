@@ -1,7 +1,16 @@
 import Image from "next/image"
 import Link from "next/link"
 import { Suspense } from "react"
-import { ArrowRight, MapPin, Star } from "lucide-react"
+import {
+  ArrowRight,
+  BadgeCheck,
+  Heart,
+  MapPin,
+  Search,
+  ShoppingCart,
+  Star,
+  Truck,
+} from "lucide-react"
 
 import { NoticeCard } from "@/components/notice-card"
 import { buttonVariants } from "@/components/ui/button"
@@ -18,6 +27,42 @@ import { BASE_API_URL } from "@/lib/base-url"
 import { MENU_CATEGORIES } from "@/lib/menu-categories"
 
 const CATEGORY_EMOJIS = ["🍕", "🥬", "🥓", "⭐", "🍟", "🍰"]
+
+const WHY_CARDS = [
+  {
+    title: "Local favourites",
+    description: "Find independent pizzerias near you and support your neighbourhood.",
+    icon: MapPin,
+  },
+  {
+    title: "Quality you can trust",
+    description: "Admins review every menu item before it reaches the public menu.",
+    icon: BadgeCheck,
+  },
+  {
+    title: "Made for pizza lovers",
+    description: "Save favourite slices, follow orders and enjoy a smooth checkout.",
+    icon: Heart,
+  },
+]
+
+const HOW_STEPS = [
+  {
+    title: "Explore the menu",
+    description: "Search, filter and compare pizzas from verified local vendors.",
+    icon: Search,
+  },
+  {
+    title: "Place your order",
+    description: "Choose a delivery date, add your address and track your order.",
+    icon: ShoppingCart,
+  },
+  {
+    title: "Enjoy every slice",
+    description: "Your vendor accepts the order and brings fresh pizza to your door.",
+    icon: Truck,
+  },
+]
 
 export default function Home() {
   return (
@@ -89,6 +134,61 @@ export default function Home() {
                   </div>
                 </div>
               </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-4 py-16">
+        <div className="animate-in fade-in slide-in-from-bottom-4 mb-8 delay-150 duration-700 fill-mode-both">
+          <h2 className="text-2xl font-semibold tracking-tight">Why choose PizzaHub?</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            A better way to discover, order and enjoy your local pizza.
+          </p>
+        </div>
+
+        <div className="grid gap-6 md:grid-cols-3">
+          {WHY_CARDS.map((card, index) => (
+            <Card
+              key={card.title}
+              className="animate-in fade-in slide-in-from-bottom-4 border-orange-500/20 duration-700"
+              style={{ animationDelay: `${index * 80}ms`, animationFillMode: "both" }}
+            >
+              <CardHeader>
+                <card.icon className="size-6 text-orange-500" />
+                <CardTitle className="text-lg">{card.title}</CardTitle>
+              </CardHeader>
+              <CardContent className="text-sm text-muted-foreground">
+                {card.description}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
+
+      <section className="bg-gradient-to-br from-orange-50 to-red-50 px-4 py-16 dark:from-orange-950/30 dark:to-red-950/30">
+        <div className="mx-auto max-w-7xl">
+          <div className="animate-in fade-in slide-in-from-bottom-4 mb-8 delay-150 duration-700 fill-mode-both">
+            <h2 className="text-2xl font-semibold tracking-tight">How PizzaHub works</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              From craving to delivery in three simple steps.
+            </p>
+          </div>
+
+          <div className="grid gap-6 md:grid-cols-3">
+            {HOW_STEPS.map((step, index) => (
+              <div
+                key={step.title}
+                className="animate-in fade-in slide-in-from-bottom-4 rounded-xl border bg-card p-6 duration-700"
+                style={{ animationDelay: `${index * 80}ms`, animationFillMode: "both" }}
+              >
+                <div className="mb-4 flex size-9 items-center justify-center rounded-full bg-orange-500 text-sm font-semibold text-white">
+                  {index + 1}
+                </div>
+                <step.icon className="mb-3 size-5 text-orange-500" />
+                <h3 className="font-medium">{step.title}</h3>
+                <p className="mt-1 text-sm text-muted-foreground">{step.description}</p>
+              </div>
             ))}
           </div>
         </div>

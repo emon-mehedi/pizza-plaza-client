@@ -75,6 +75,15 @@ const ItemDetailsPage = ({ params }: PageProps<"/menu/[id]">) => {
 
     const item = itemResult.item
 
+    // The API only serves approved items, but check again here so a stale form
+    // cannot slip through if an item is hidden while the page is open.
+    if (item.status !== "approved") {
+      return failure("This item is no longer available.", prevState)
+    }
+    if (item.vendorId === user.id) {
+      return failure("You cannot order an item from your own restaurant.", prevState)
+    }
+
     const order: IOrders = {
       itemId: item._id ?? item.id ?? itemId,
       vendorId: item.vendorId,
@@ -146,6 +155,7 @@ async function ItemDetails({
   const session = await auth.api.getSession({ headers: await headers() })
   const user = session?.user as { id?: string; role?: string } | undefined
   const canOrder = Boolean(user?.id && user.role === "customer")
+  const isOwnItem = Boolean(user?.id && item.vendorId === user.id)
 
   const itemId = item._id ?? item.id ?? id
 
@@ -208,14 +218,21 @@ async function ItemDetails({
         ) : (
           <Card>
             <CardHeader>
-              <CardTitle className="text-xl">Ready to order?</CardTitle>
+              <CardTitle className="text-xl">
+                {isOwnItem ? "This is your item" : "Ready to order?"}
+              </CardTitle>
               <CardDescription>
-                Sign in with a customer account to place an order for this item.
+                {isOwnItem
+                  ? "Vendors cannot order their own menu items. You can manage it from your dashboard."
+                  : "Sign in with a customer account to place an order for this item."}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Link href="/sign-in" className={buttonVariants({ size: "lg", className: "w-full" })}>
-                Sign in to order
+              <Link
+                href={isOwnItem ? "/dashboard/vendor/my-menu-items" : "/sign-in"}
+                className={buttonVariants({ size: "lg", className: "w-full" })}
+              >
+                {isOwnItem ? "Manage this item" : "Sign in to order"}
               </Link>
             </CardContent>
           </Card>
@@ -297,7 +314,7 @@ function isMenuItemRecord(value: unknown): value is MenuItemRecord {
     typeof item.location === "string" &&
     typeof item.images === "string" &&
     typeof item.createdAt === "string" &&
-    typeof item.status === "string"
+    item.status === "approved"
   )
 }
 

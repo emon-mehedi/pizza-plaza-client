@@ -20,7 +20,7 @@ import { auth } from "@/lib/auth"
 import { BASE_API_URL } from "@/lib/base-url"
 import type { IOrders } from "@/lib/types/all-types"
 
-type OrderRecord = IOrders & { _id?: string; item?: ItemRecord }
+type OrderRecord = IOrders & { id?: string; _id?: string; item?: ItemRecord }
 type ItemRecord = {
   _id?: string
   id?: string
@@ -116,7 +116,7 @@ async function CustomerOrders() {
           const item = order.item ?? items.get(order.itemId)
 
           return (
-            <Card key={order._id ?? `${order.itemId}-${order.createdAt}`} className="h-full">
+            <Card key={order.id ?? order._id ?? `${order.itemId}-${order.createdAt}`} className="h-full">
               <CardHeader>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
@@ -176,14 +176,24 @@ async function CustomerOrders() {
 
               <CardFooter className="mt-auto flex-wrap items-center justify-between gap-3">
                 <p className="text-xs text-muted-foreground">
-                  Order ID: {order._id ?? "—"}
+                  Order ID: {order.id ?? order._id ?? "—"}
                 </p>
-                <Link
-                  href={`/menu/${order.itemId}`}
-                  className={buttonVariants({ variant: "outline", size: "sm" })}
-                >
-                  View item
-                </Link>
+                <div className="flex flex-wrap gap-2">
+                  {order.id || order._id ? (
+                    <Link
+                      href={`/dashboard/customer/my-orders/${order.id ?? order._id}`}
+                      className={buttonVariants({ size: "sm" })}
+                    >
+                      View details
+                    </Link>
+                  ) : null}
+                  <Link
+                    href={`/menu/${order.itemId}`}
+                    className={buttonVariants({ variant: "outline", size: "sm" })}
+                  >
+                    View item
+                  </Link>
+                </div>
               </CardFooter>
             </Card>
           )
@@ -259,6 +269,7 @@ function normalizeOrders(payload: unknown): OrderRecord[] {
     return [
       {
         ...(order as unknown as IOrders),
+        id: typeof order.id === "string" ? order.id : undefined,
         _id: typeof order._id === "string" ? order._id : undefined,
         vendorId: typeof order.vendorId === "string" ? order.vendorId : "",
         deliveryDate: typeof order.deliveryDate === "string" ? order.deliveryDate : "",

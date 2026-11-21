@@ -15,7 +15,12 @@ const client = new MongoClient(mongoUri);
 const db = client.db("pizzaplaza");
 
 export const auth = betterAuth({
-  database: mongodbAdapter(db),
+  database: mongodbAdapter(db, { client }),
+  // Vercel terminates TLS and proxies requests to the function via
+  // x-forwarded-host / x-forwarded-proto, so Better Auth must trust those headers.
+  advanced: {
+    trustedProxyHeaders: true,
+  },
   emailAndPassword: {
     enabled: true,
   },
